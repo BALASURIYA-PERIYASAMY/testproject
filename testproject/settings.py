@@ -144,3 +144,12 @@ SIMPLE_JWT = {
 ### Username: admin
 ### email: admin@gmail.com
 ### Password : Admin@123admin
+
+
+## username  : bala
+## password : princebala01
+
+
+## username : prince
+## posword : 6422
+
