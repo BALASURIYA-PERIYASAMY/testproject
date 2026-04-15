@@ -149,3 +149,7 @@ SIMPLE_JWT = {
 
 ## username  : bala
 ## password : princebala01
+
+## prince
+## 123456
+## teacher

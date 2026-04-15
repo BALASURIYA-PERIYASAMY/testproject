@@ -15,8 +15,7 @@ class User(AbstractUser):
     
 class Test(models.Model):
     title        = models.CharField(max_length=200)
-    created_by   = models.ForeignKey(User, on_delete=models.CASCADE,
-                                     related_name='created_tests')
+    created_by   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tests')
     time_limit   = models.PositiveIntegerField(default=30)   # minutes
     is_published = models.BooleanField(default=False)
     created_at   = models.DateTimeField(auto_now_add=True)
@@ -28,8 +27,7 @@ class Test(models.Model):
 class Question(models.Model):
     TYPE_CHOICES = [('mcq', 'MCQ'), ('text', 'Text')]
 
-    test          = models.ForeignKey(Test, on_delete=models.CASCADE,
-                                      related_name='questions')
+    test          = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='questions')
     text          = models.TextField()
     question_type = models.CharField(max_length=5, choices=TYPE_CHOICES)
     marks         = models.PositiveIntegerField(default=1)
@@ -39,8 +37,7 @@ class Question(models.Model):
 
 
 class Option(models.Model):
-    question   = models.ForeignKey(Question, on_delete=models.CASCADE,
-                                   related_name='options')
+    question   = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
     text       = models.CharField(max_length=300)
     is_correct = models.BooleanField(default=False)
 
@@ -49,10 +46,8 @@ class Option(models.Model):
 
 
 class Submission(models.Model):
-    student      = models.ForeignKey(User, on_delete=models.CASCADE,
-                                     related_name='submissions')
-    test         = models.ForeignKey(Test, on_delete=models.CASCADE,
-                                     related_name='submissions')
+    student      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submissions')
+    test         = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='submissions')
     score        = models.FloatField(null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,10 +57,8 @@ class Submission(models.Model):
 
 class Response(models.Model):
     """One answer to one question within a submission."""
-    submission  = models.ForeignKey(Submission, on_delete=models.CASCADE,
-                                    related_name='responses')
+    submission  = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='responses')
     question    = models.ForeignKey(Question, on_delete=models.CASCADE)
-    chosen_option = models.ForeignKey(Option, on_delete=models.SET_NULL,
-                                      null=True, blank=True)  # MCQ
+    chosen_option = models.ForeignKey(Option, on_delete=models.SET_NULL, null=True, blank=True)  # MCQ
     text_answer   = models.TextField(blank=True)              # Text Q
     marks_awarded = models.FloatField(default=0)
