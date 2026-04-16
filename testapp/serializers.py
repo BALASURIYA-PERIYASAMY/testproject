@@ -198,9 +198,3 @@ class UploadTestCSVSerializer(serializers.Serializer):
 
         return test
     
-
-
-
-
-
-## git remote add origin https://github.com/BALASURIYA-PERIYASAMY/testproject.git
