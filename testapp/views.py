@@ -3,10 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .permissions import IsTeacher
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer, LoginResponseSerializer, CreateTestSerializer, CreatQuestionSerializer
-from django.contrib.auth import authenticate
+
+from testapp.permissions import IsTeacher
+from .serializers import CreateQuestionSerializer, LoginSerializer, RegisterSerializer, UserSerializer
 
 # ── Helper: generate tokens for a user ────────────────────
 def get_tokens_for_user(user):
@@ -45,9 +45,10 @@ class RegisterView(APIView):
         # Validation failed → return errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-def home(request):
-        return render(request, 'index.html')
 
+
+from django.contrib.auth import authenticate
+from .serializers import LoginSerializer, LoginResponseSerializer
 # ══════════════════════════════════════════════════════════
 # LOGIN VIEW
 # ══════════════════════════════════════════════════════════
@@ -69,42 +70,69 @@ class LoginView(APIView):
             return Response({
                 'user':   LoginResponseSerializer(user).data,
                 'tokens': tokens,
-            })
+            }, status=status.HTTP_200_OK)
 
         return Response(
             {'error': 'Invalid username or password'},
             status=status.HTTP_401_UNAUTHORIZED
         )
-    
-class CreateTestView(APIView):
-    permission_classes = [IsTeacher]   # user must be logged in
 
+from .serializers import CreateTestSerializer, ListTestSerializer
+
+class CreateTestView(APIView):
+    permission_classes = [IsTeacher]
     def post(self, request):
         serializer = CreateTestSerializer(data=request.data)
+        if serializer.is_valid():
+            test = serializer.save(created_by=request.user)
+            return Response({'message': 'Test created successfully', 'test_id': test.id}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        # List all tests created by the teacher
+        tests = request.user.created_tests.all()
+        serializer = ListTestSerializer(tests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class QuestionView(APIView):
+    permission_classes = [IsTeacher]
+    def post(self, request):
+        serializer = CreateQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            question = serializer.save()
+            return Response({'message': 'Question created successfully', 'question_id': question.id}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+
+
+###############################################################################################
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from .serializers import UploadTestCSVSerializer
+
+
+class UploadTestCSVView(APIView):
+    permission_classes = [IsTeacher]
+
+    def post(self, request):
+        serializer = UploadTestCSVSerializer(
+            data=request.data,
+            context={"request": request}
+        )
 
         if serializer.is_valid():
-            # Automatically assign logged-in user
-            test = serializer.save(created_by=request.user)
+            test = serializer.save()
 
             return Response({
                 "message": "Test created successfully",
                 "test_id": test.id
-            }, status=status.HTTP_201_CREATED)
+            }, status=201)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    
-class CreateQuestionView(APIView):
-    permission_classes = [IsTeacher]
-
-    def post(self, request):
-        serializer = CreatQuestionSerializer(data=request.data)
-        if serializer.is_valid():
-            question = serializer.save(created_by=request.user)
-
-            return Response({
-                "message": "Questions created Successfully",
-                "Question_id":question.id
-            }, status = status.HTTP_201_CREATED)
-        print(serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=400)
